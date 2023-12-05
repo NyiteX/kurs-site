@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.SqlClient;
+using System.Xml.Linq;
+using kursach_4._12._23.Models;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -43,14 +45,32 @@ namespace kursach_4._12._23.Controllers
 
         // GET api/<ProductController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        public JsonResult Get(int id)
         {
-            return "value";
+            string query = "SELECT * FROM Product WHERE ID = @id";
+            DataTable table = new DataTable();
+            string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
+            SqlDataReader myReader;
+
+            using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@id", id);
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult(table);
         }
 
         // POST api/<ProductController>
         [HttpPost]
-        public IActionResult Post([FromForm] string name, string description, int count, decimal price, string category)
+        public IActionResult Post([FromForm] string name, [FromForm] string description, [FromForm] int count, [FromForm] decimal price, [FromForm] string category)
         {
             try
             {
@@ -93,8 +113,34 @@ namespace kursach_4._12._23.Controllers
 
         // DELETE api/<ProductController>/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        public IActionResult Delete(int id)
         {
+            try
+            {
+                string query = "DELETE FROM Product WHERE ID = @id";
+                DataTable table = new DataTable();
+                string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
+                SqlDataReader myReader;
+
+                using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+                {
+                    myCon.Open();
+                    using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                    {
+                        myCommand.Parameters.AddWithValue("@id", id);
+
+                        myReader = myCommand.ExecuteReader();
+                        table.Load(myReader);
+                        myReader.Close();
+                        myCon.Close();
+                    }
+                }
+                return Ok("Product deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error deleting product: {ex.Message}");
+            }
         }
     }
 }
