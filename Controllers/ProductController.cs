@@ -21,7 +21,7 @@ namespace kursach_4._12._23.Controllers
         [HttpGet]
         public JsonResult Get()
         {
-            string query = "SELECT * FROM Notes";
+            string query = "SELECT * FROM Product";
             DataTable table = new DataTable();
             string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
             SqlDataReader myReader;
@@ -50,8 +50,39 @@ namespace kursach_4._12._23.Controllers
 
         // POST api/<ProductController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult Post([FromForm] string name, string description, int count, decimal price, string category)
         {
+            try
+            {
+                string query = "INSERT INTO Product(Name, Price, Count, Description, Category) VALUES (@Name, @Count, @Price, @Description, @Category)";
+                DataTable table = new DataTable();
+                string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
+                SqlDataReader myReader;
+
+                using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+                {
+                    myCon.Open();
+                    using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                    {
+                        myCommand.Parameters.AddWithValue("@Name", name);
+                        myCommand.Parameters.AddWithValue("@Price", price);
+                        myCommand.Parameters.AddWithValue("@Description", description);
+                        myCommand.Parameters.AddWithValue("@Count", count);
+                        myCommand.Parameters.AddWithValue("@Category", category);
+
+
+                        myReader = myCommand.ExecuteReader();
+                        table.Load(myReader);
+                        myReader.Close();
+                        myCon.Close();
+                    }
+                }
+                return Ok("Product added successfully");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error adding product: {ex.Message}");
+            }
         }
 
         // PUT api/<ProductController>/5
