@@ -1,4 +1,6 @@
-﻿namespace kursach_4._12._23.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace kursach_4._12._23.Models
 {
     public class ProductModel
     {

@@ -3,6 +3,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Xml.Linq;
 using kursach_4._12._23.Models;
+using System.Globalization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -70,11 +71,18 @@ namespace kursach_4._12._23.Controllers
 
         // POST api/<ProductController>
         [HttpPost]
-        public IActionResult Post([FromForm] string name, [FromForm] string description, [FromForm] int count, [FromForm] decimal price, [FromForm] string category)
+        public IActionResult Post([FromForm] string name, [FromForm] string description, [FromForm] int count, [FromForm] string price, [FromForm] string category)
         {
+
+            if (!double.TryParse(price, NumberStyles.Any, CultureInfo.InvariantCulture, out var convertedPrice))
+            {
+                return BadRequest("Invalid price format");
+            }
+
+
             try
             {
-                string query = "INSERT INTO Product(Name, Price, Count, Description, Category) VALUES (@Name, @Count, @Price, @Description, @Category)";
+                string query = "INSERT INTO Product(Name, Price, Count, Description, Category) VALUES (@Name, @Price, @Count, @Description, @Category)";
                 DataTable table = new DataTable();
                 string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
                 SqlDataReader myReader;
@@ -85,7 +93,7 @@ namespace kursach_4._12._23.Controllers
                     using (SqlCommand myCommand = new SqlCommand(query, myCon))
                     {
                         myCommand.Parameters.AddWithValue("@Name", name);
-                        myCommand.Parameters.AddWithValue("@Price", price);
+                        myCommand.Parameters.AddWithValue("@Price", convertedPrice);
                         myCommand.Parameters.AddWithValue("@Description", description);
                         myCommand.Parameters.AddWithValue("@Count", count);
                         myCommand.Parameters.AddWithValue("@Category", category);
