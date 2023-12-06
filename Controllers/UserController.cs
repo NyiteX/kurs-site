@@ -24,7 +24,7 @@ namespace kursach_4._12._23.Controllers
         [HttpGet]
         public JsonResult Get()
         {
-            string query = "SELECT * FROM User";
+            string query = "SELECT * FROM [User]";
             DataTable table = new DataTable();
             string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
             SqlDataReader myReader;
@@ -53,9 +53,41 @@ namespace kursach_4._12._23.Controllers
 
         // POST api/<UserController>
         [HttpPost]
-        public void Post([FromBody] string value)
+        public IActionResult Post([FromForm] string name, [FromForm] string email, [FromForm] string password)
         {
+            Console.WriteLine(name + ", " + email + ", " + password);
+            try
+            {
+                string query = "INSERT INTO [User] (Name, Password, Email) VALUES (@Name, @Password, @Email)";
+                string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
+
+                using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+                {
+                    myCon.Open();
+                    using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                    {
+                        myCommand.Parameters.AddWithValue("@Name", name);
+                        myCommand.Parameters.AddWithValue("@Email", email);
+                        myCommand.Parameters.AddWithValue("@Password", password);
+
+
+                        if (myCommand.ExecuteNonQuery() > 0)
+                        {
+                            return Ok("User added successfully");
+                        }
+                        else
+                        {
+                            return BadRequest("User not added.");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error adding user: {ex.Message}");
+            }
         }
+
 
         // PUT api/<UserController>/5
         [HttpPut("{id}")]
@@ -69,7 +101,7 @@ namespace kursach_4._12._23.Controllers
         {
             try
             {
-                string query = "DELETE FROM User WHERE ID = @id";
+                string query = "DELETE FROM [User] WHERE ID = @id";
                 DataTable table = new DataTable();
                 string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
                 SqlDataReader myReader;

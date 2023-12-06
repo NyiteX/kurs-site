@@ -24,7 +24,7 @@ namespace kursach_4._12._23.Controllers
         [HttpGet]
         public JsonResult Get()
         {
-            string query = "SELECT * FROM Product";
+            string query = "SELECT * FROM [Product]";
             DataTable table = new DataTable();
             string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
             SqlDataReader myReader;
@@ -48,7 +48,7 @@ namespace kursach_4._12._23.Controllers
         [HttpGet("{id}")]
         public JsonResult Get(int id)
         {
-            string query = "SELECT * FROM Product WHERE ID = @id";
+            string query = "SELECT * FROM [Product] WHERE ID = @id";
             DataTable table = new DataTable();
             string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
             SqlDataReader myReader;
@@ -82,7 +82,7 @@ namespace kursach_4._12._23.Controllers
 
             try
             {
-                string query = "INSERT INTO Product(Name, Price, Count, Description, Category) VALUES (@Name, @Price, @Count, @Description, @Category)";
+                string query = "INSERT INTO [Product] (Name, Price, Count, Description, Category) VALUES (@Name, @Price, @Count, @Description, @Category)";
                 DataTable table = new DataTable();
                 string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
                 SqlDataReader myReader;
@@ -125,7 +125,7 @@ namespace kursach_4._12._23.Controllers
         {
             try
             {
-                string query = "DELETE FROM Product WHERE ID = @id";
+                string query = "DELETE FROM [Product] WHERE ID = @id";
                 DataTable table = new DataTable();
                 string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
                 SqlDataReader myReader;
