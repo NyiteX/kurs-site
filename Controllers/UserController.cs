@@ -55,7 +55,6 @@ namespace kursach_4._12._23.Controllers
         [HttpPost]
         public IActionResult Post([FromForm] string name, [FromForm] string email, [FromForm] string password)
         {
-            Console.WriteLine(name + ", " + email + ", " + password);
             try
             {
                 string query = "INSERT INTO [User] (Name, Password, Email) VALUES (@Name, @Password, @Email)";
@@ -87,7 +86,6 @@ namespace kursach_4._12._23.Controllers
                 return BadRequest($"Error adding user: {ex.Message}");
             }
         }
-
 
         // PUT api/<UserController>/5
         [HttpPut("{id}")]
