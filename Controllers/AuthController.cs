@@ -41,12 +41,12 @@ namespace kursach_4._12._23.Controllers
 
         // POST api/<AuthController>
         [HttpPost]
-        public IActionResult Post([FromForm] string name, [FromForm] string password)
+        public IActionResult Post([FromForm] LoginModel loginModel)
         {
             try
             {
                 string query = "SELECT Password FROM [User] WHERE Name = @Name";
-                if (name.Contains("@"))
+                if (loginModel.Name.Contains("@"))
                 {
                     query = "SELECT Password FROM [User] WHERE Email = @Name";
                 }
@@ -57,7 +57,7 @@ namespace kursach_4._12._23.Controllers
                     myCon.Open();
                     using (SqlCommand myCommand = new SqlCommand(query, myCon))
                     {
-                        myCommand.Parameters.AddWithValue("@Name", name);
+                        myCommand.Parameters.AddWithValue("@Name", loginModel.Name);
 
                         SqlDataReader reader = myCommand.ExecuteReader();
 
@@ -67,7 +67,7 @@ namespace kursach_4._12._23.Controllers
                             {
                                 string storedPasswordHash = reader["Password"].ToString();
 
-                                bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(password, storedPasswordHash);
+                                bool isPasswordCorrect = BCrypt.Net.BCrypt.Verify(loginModel.Password, storedPasswordHash);
 
                                 if (isPasswordCorrect)
                                 {

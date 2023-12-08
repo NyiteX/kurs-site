@@ -71,10 +71,10 @@ namespace kursach_4._12._23.Controllers
 
         // POST api/<ProductController>
         [HttpPost]
-        public IActionResult Post([FromForm] string name, [FromForm] string description, [FromForm] int count, [FromForm] string price, [FromForm] string category)
+        public IActionResult Post([FromForm] ProductModel productModel)
         {
 
-            if (!double.TryParse(price, NumberStyles.Any, CultureInfo.InvariantCulture, out var convertedPrice))
+            if (!double.TryParse(productModel.Price, NumberStyles.Any, CultureInfo.InvariantCulture, out var convertedPrice))
             {
                 return BadRequest("Invalid price format");
             }
@@ -92,11 +92,11 @@ namespace kursach_4._12._23.Controllers
                     myCon.Open();
                     using (SqlCommand myCommand = new SqlCommand(query, myCon))
                     {
-                        myCommand.Parameters.AddWithValue("@Name", name);
+                        myCommand.Parameters.AddWithValue("@Name", productModel.Name);
                         myCommand.Parameters.AddWithValue("@Price", convertedPrice);
-                        myCommand.Parameters.AddWithValue("@Description", description);
-                        myCommand.Parameters.AddWithValue("@Count", count);
-                        myCommand.Parameters.AddWithValue("@Category", category);
+                        myCommand.Parameters.AddWithValue("@Description", productModel.Description);
+                        myCommand.Parameters.AddWithValue("@Count", productModel.Count);
+                        myCommand.Parameters.AddWithValue("@Category", productModel.Category);
 
 
                         myReader = myCommand.ExecuteReader();

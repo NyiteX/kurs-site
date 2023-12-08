@@ -50,24 +50,34 @@ namespace kursach_4._12._23.Controllers
         {
             return "value";
         }
-
+        //register user
         // POST api/<UserController>
         [HttpPost]
-        public IActionResult Post([FromForm] string name, [FromForm] string email, [FromForm] string password)
+        public IActionResult Post([FromForm] UserModel userModel)
         {
             try
             {
+                if(!IsUnique(userModel.Name, "name"))
+                {
+                    return BadRequest("Логин занят.");
+                }
+                else if(!IsUnique(userModel.Email, "email")) 
+                {
+                    return BadRequest("Email занят.");
+                }
+
                 string query = "INSERT INTO [User] (Name, Password, Email) VALUES (@Name, @Password, @Email)";
                 string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
 
                 using (SqlConnection myCon = new SqlConnection(sqlDatasource))
                 {
                     myCon.Open();
+                    
                     using (SqlCommand myCommand = new SqlCommand(query, myCon))
                     {
-                        myCommand.Parameters.AddWithValue("@Name", name);
-                        myCommand.Parameters.AddWithValue("@Email", email);
-                        myCommand.Parameters.AddWithValue("@Password", password);
+                        myCommand.Parameters.AddWithValue("@Name", userModel.Name);
+                        myCommand.Parameters.AddWithValue("@Email", userModel.Email);
+                        myCommand.Parameters.AddWithValue("@Password", userModel.Password);
 
 
                         if (myCommand.ExecuteNonQuery() > 0)
@@ -122,6 +132,31 @@ namespace kursach_4._12._23.Controllers
             catch (Exception ex)
             {
                 return BadRequest($"Error deleting user: {ex.Message}");
+            }
+        }
+
+        bool IsUnique(string value, string type)
+        {
+            string query = "SELECT COUNT(*) FROM [User] WHERE Email = @Email";
+            if(type == "name")
+                query = "SELECT COUNT(*) FROM [User] WHERE Name = @Email";
+            string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
+
+            using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+            {
+                myCon.Open();
+
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@Email", value);
+
+                    int count = (int)myCommand.ExecuteScalar();
+
+                    if (count == 0)
+                        return true;
+                    else
+                        return false;
+                }
             }
         }
     }
