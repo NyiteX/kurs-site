@@ -40,6 +40,10 @@ namespace kursach_4._12._23.Controllers
                     myCon.Close();
                 }
             }
+            if (table.Rows.Count == 0)
+            {
+                return new JsonResult(new { error = "Nothing here" });
+            }
 
             return new JsonResult(table);
         }
@@ -112,6 +116,36 @@ namespace kursach_4._12._23.Controllers
                 return BadRequest($"Error adding product: {ex.Message}");
             }
         }
+        [HttpPost("Search")]
+        public JsonResult Search([FromForm] string word)
+        {
+            string query = "SELECT * FROM [Product] WHERE Name LIKE '%' + @name + '%'";
+
+            DataTable table = new DataTable();
+            string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
+            SqlDataReader myReader;
+
+            using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@Name", word);
+
+                    myReader = myCommand.ExecuteReader();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+            if (table.Rows.Count == 0)
+            {
+                return new JsonResult(new { error = "Nothing here" });
+            }
+
+            return new JsonResult(table);
+        }
+    
 
         // PUT api/<ProductController>/5
         [HttpPut("{id}")]
