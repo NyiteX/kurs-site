@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Xml.Linq;
 using kursach_4._12._23.Models;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -22,7 +23,7 @@ namespace kursach_4._12._23.Controllers
 
         // GET: api/<ProductController>
         [HttpGet]
-        public JsonResult Get()
+        public async Task<JsonResult> Get()
         {
             string query = "SELECT * FROM [Product]";
             DataTable table = new DataTable();
@@ -50,7 +51,7 @@ namespace kursach_4._12._23.Controllers
 
         // GET api/<ProductController>/5
         [HttpGet("{id}")]
-        public JsonResult Get(int id)
+        public async Task<JsonResult> Get(int id)
         {
             string query = "SELECT * FROM [Product] WHERE ID = @id";
             DataTable table = new DataTable();
@@ -75,7 +76,7 @@ namespace kursach_4._12._23.Controllers
 
         // POST api/<ProductController>
         [HttpPost]
-        public IActionResult Post([FromForm] ProductModel productModel)
+        public async Task<IActionResult> Post([FromForm] ProductModel productModel)
         {
 
             if (!double.TryParse(productModel.Price, NumberStyles.Any, CultureInfo.InvariantCulture, out var convertedPrice))
@@ -117,7 +118,8 @@ namespace kursach_4._12._23.Controllers
             }
         }
         [HttpPost("Search")]
-        public JsonResult Search([FromForm] string word)
+        [Authorize]
+        public async Task<JsonResult> Search([FromForm] string word)
         {
             string query = "SELECT * FROM [Product] WHERE Name LIKE '%' + @name + '%'";
 
@@ -155,7 +157,7 @@ namespace kursach_4._12._23.Controllers
 
         // DELETE api/<ProductController>/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {

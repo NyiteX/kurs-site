@@ -22,7 +22,7 @@ namespace kursach_4._12._23.Controllers
 
         // GET: api/<UserController>
         [HttpGet]
-        public JsonResult Get()
+        public async Task<JsonResult> Get()
         {
             string query = "SELECT * FROM [User]";
             DataTable table = new DataTable();
@@ -53,7 +53,7 @@ namespace kursach_4._12._23.Controllers
         //register user
         // POST api/<UserController>
         [HttpPost]
-        public IActionResult Post([FromForm] UserModel userModel)
+        public async Task<IActionResult> Post([FromForm] UserModel userModel)
         {
             try
             {
@@ -105,7 +105,7 @@ namespace kursach_4._12._23.Controllers
 
         // DELETE api/<UserController>/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {

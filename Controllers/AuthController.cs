@@ -3,6 +3,10 @@ using kursach_4._12._23.Models;
 using System.Data;
 using System.Data.SqlClient;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -12,12 +16,6 @@ namespace kursach_4._12._23.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        /*readonly IAuthService _authService;
-
-        public AuthController(IAuthService authService)
-        {
-            _authService = authService;
-        }*/
         IConfiguration _configuration;
 
         public AuthController(IConfiguration configuration)
@@ -41,14 +39,14 @@ namespace kursach_4._12._23.Controllers
 
         // POST api/<AuthController>
         [HttpPost]
-        public IActionResult Post([FromForm] LoginModel loginModel)
+        public async Task<IActionResult> Post([FromForm] LoginModel loginModel)
         {
             try
             {
-                string query = "SELECT Password FROM [User] WHERE Name = @Name";
+                string query = "SELECT * FROM [User] WHERE Name = @Name";
                 if (loginModel.Name.Contains("@"))
                 {
-                    query = "SELECT Password FROM [User] WHERE Email = @Name";
+                    query = "SELECT * FROM [User] WHERE Email = @Name";
                 }
                 string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
 
@@ -71,7 +69,16 @@ namespace kursach_4._12._23.Controllers
 
                                 if (isPasswordCorrect)
                                 {
-                                    return Ok("User found.");
+                                    string userName = reader["Name"].ToString();
+                                    string userEmail = reader["Email"].ToString();
+                                    UserModel user = new UserModel
+                                    {
+                                        Name = userName,
+                                        Email = userEmail,
+                                    };
+
+                                    var token = GenerateJwtToken(user);
+                                    return Ok(new {Token = token});
                                 }
                                 else
                                 {
@@ -91,7 +98,7 @@ namespace kursach_4._12._23.Controllers
                 return BadRequest($"Error login: {ex.Message}");
             }
             return BadRequest("Unexpected error.");
-        }      
+        }
 
         // PUT api/<AuthController>/5
         [HttpPut("{id}")]
@@ -103,6 +110,30 @@ namespace kursach_4._12._23.Controllers
         [HttpDelete("{id}")]
         public void Delete(int id)
         {
+        }
+
+
+        //
+        private string GenerateJwtToken(UserModel user)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new[]
+            {
+            new Claim(ClaimTypes.Name, user.Name),
+            new Claim(ClaimTypes.Email, user.Email),
+            };
+
+            var token = new JwtSecurityToken(
+    issuer: _configuration["Jwt:Issuer"],
+    audience: _configuration["Jwt:Audience"], // Добавлено отличие
+    claims: claims,
+    expires: DateTime.Now.AddMinutes(30),
+    signingCredentials: credentials
+);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
     }
 
