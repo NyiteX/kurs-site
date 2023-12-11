@@ -16,5 +16,6 @@ namespace kursach_4._12._23.Models
 
         [Required(ErrorMessage = "Password is required")]
         public string Password { get; set; }
+        public bool isAdmin { get; set; }
     }
 }

@@ -71,13 +71,15 @@ namespace kursach_4._12._23.Controllers
                                 {
                                     string userName = reader["Name"].ToString();
                                     string userEmail = reader["Email"].ToString();
+                                    bool isuserAdmin = Convert.ToBoolean(reader["isAdmin"]);
                                     UserModel user = new UserModel
                                     {
                                         Name = userName,
                                         Email = userEmail,
+                                        isAdmin = isuserAdmin,
                                     };
 
-                                    var token = GenerateJwtToken(user);
+                                    var token = GenerateJwtToken(user,user.isAdmin);
                                     return Ok(new {Token = token});
                                 }
                                 else
@@ -114,7 +116,38 @@ namespace kursach_4._12._23.Controllers
 
 
         //
-        private string GenerateJwtToken(UserModel user)
+        private string GenerateJwtToken(UserModel user, bool isAdmin)
+        {
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
+            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Name),
+                new Claim(ClaimTypes.Email, user.Email),
+            };
+
+            if (isAdmin)
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "admin"));
+            }
+            else
+            {
+                claims.Add(new Claim(ClaimTypes.Role, "user"));
+            }
+
+            var token = new JwtSecurityToken(
+                issuer: _configuration["Jwt:Issuer"],
+                audience: _configuration["Jwt:Audience"],
+                claims: claims,
+                expires: DateTime.Now.AddMinutes(5),
+                signingCredentials: credentials
+            );
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        /*private string GenerateJwtToken(UserModel user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -126,15 +159,15 @@ namespace kursach_4._12._23.Controllers
             };
 
             var token = new JwtSecurityToken(
-    issuer: _configuration["Jwt:Issuer"],
-    audience: _configuration["Jwt:Audience"], // Добавлено отличие
-    claims: claims,
-    expires: DateTime.Now.AddMinutes(30),
-    signingCredentials: credentials
-);
+            issuer: _configuration["Jwt:Issuer"],
+            audience: _configuration["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.Now.AddMinutes(30),
+            signingCredentials: credentials
+            );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+        }*/
     }
 
 }

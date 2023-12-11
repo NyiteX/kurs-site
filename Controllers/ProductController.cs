@@ -118,7 +118,7 @@ namespace kursach_4._12._23.Controllers
             }
         }
         [HttpPost("Search")]
-        [Authorize]
+        [Authorize(Roles = "admin")]
         public async Task<JsonResult> Search([FromForm] string word)
         {
             string query = "SELECT * FROM [Product] WHERE Name LIKE '%' + @name + '%'";
