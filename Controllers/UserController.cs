@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Xml.Linq;
 using kursach_4._12._23.Models;
 using System.Globalization;
+using Microsoft.AspNetCore.Authorization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -22,7 +23,8 @@ namespace kursach_4._12._23.Controllers
 
         // GET: api/<UserController>
         [HttpGet]
-        public JsonResult Get()
+        [Authorize(Roles = "admin")]
+        public async Task<JsonResult> Get()
         {
             string query = "SELECT * FROM [User]";
             DataTable table = new DataTable();
@@ -53,7 +55,7 @@ namespace kursach_4._12._23.Controllers
         //register user
         // POST api/<UserController>
         [HttpPost]
-        public IActionResult Post([FromForm] UserModel userModel)
+        public async Task<IActionResult> Post([FromForm] UserModel userModel)
         {
             try
             {
@@ -99,13 +101,14 @@ namespace kursach_4._12._23.Controllers
 
         // PUT api/<UserController>/5
         [HttpPut("{id}")]
+
         public void Put(int id, [FromBody] string value)
         {
         }
 
         // DELETE api/<UserController>/5
         [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             try
             {
