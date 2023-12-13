@@ -35,7 +35,7 @@ namespace kursach_4._12._23.Controllers
                 myCon.Open();
                 using (SqlCommand myCommand = new SqlCommand(query, myCon))
                 {
-                    myReader = myCommand.ExecuteReader();
+                    myReader = await myCommand.ExecuteReaderAsync();
                     table.Load(myReader);
                     myReader.Close();
                     myCon.Close();
@@ -64,7 +64,7 @@ namespace kursach_4._12._23.Controllers
                 using (SqlCommand myCommand = new SqlCommand(query, myCon))
                 {
                     myCommand.Parameters.AddWithValue("@id", id);
-                    myReader = myCommand.ExecuteReader();
+                    myReader = await myCommand.ExecuteReaderAsync();
                     table.Load(myReader);
                     myReader.Close();
                     myCon.Close();
@@ -76,6 +76,7 @@ namespace kursach_4._12._23.Controllers
 
         // POST api/<ProductController>
         [HttpPost]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Post([FromForm] ProductModel productModel)
         {
 
@@ -104,7 +105,7 @@ namespace kursach_4._12._23.Controllers
                         myCommand.Parameters.AddWithValue("@Category", productModel.Category);
 
 
-                        myReader = myCommand.ExecuteReader();
+                        myReader = await myCommand.ExecuteReaderAsync();
                         table.Load(myReader);
                         myReader.Close();
                         myCon.Close();
@@ -118,7 +119,6 @@ namespace kursach_4._12._23.Controllers
             }
         }
         [HttpPost("Search")]
-        [Authorize(Roles = "admin")]
         public async Task<JsonResult> Search([FromForm] string word)
         {
             string query = "SELECT * FROM [Product] WHERE Name LIKE '%' + @name + '%'";
@@ -134,7 +134,7 @@ namespace kursach_4._12._23.Controllers
                 {
                     myCommand.Parameters.AddWithValue("@Name", word);
 
-                    myReader = myCommand.ExecuteReader();
+                    myReader = await myCommand.ExecuteReaderAsync();
                     table.Load(myReader);
                     myReader.Close();
                     myCon.Close();
@@ -147,16 +147,53 @@ namespace kursach_4._12._23.Controllers
 
             return new JsonResult(table);
         }
-    
+
 
         // PUT api/<ProductController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
+        [HttpPut]
+        [Authorize(Roles = "admin")]
+        public async Task<IActionResult> Put([FromForm] ProductModel productModel)
         {
+            if (!double.TryParse(productModel.Price, NumberStyles.Any, CultureInfo.InvariantCulture, out var convertedPrice))
+            {
+                return BadRequest("Invalid price format");
+            }
+            await Console.Out.WriteLineAsync(productModel.Name + " ID: " + productModel.ID);
+            try
+            {
+                string query = "UPDATE [Product] SET Name = @Name, Price = @Price, Count = @Count, Description = @Description, Category = @Category WHERE ID = @Id";
+                string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
+
+                using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+                {
+                    await myCon.OpenAsync();
+                    using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                    {
+                        myCommand.Parameters.AddWithValue("@Id", productModel.ID);
+                        myCommand.Parameters.AddWithValue("@Name", productModel.Name);
+                        myCommand.Parameters.AddWithValue("@Price", convertedPrice);
+                        myCommand.Parameters.AddWithValue("@Description", productModel.Description);
+                        myCommand.Parameters.AddWithValue("@Count", productModel.Count);
+                        myCommand.Parameters.AddWithValue("@Category", productModel.Category);
+
+                        myCommand.ExecuteNonQuery();
+                    }
+                }
+
+                return Ok("Product updated successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating product: {ex}");
+                return BadRequest($"Error updating product: {ex.Message}");
+            }
         }
+
+
 
         // DELETE api/<ProductController>/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> Delete(int id)
         {
             try
