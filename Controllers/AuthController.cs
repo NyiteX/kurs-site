@@ -57,17 +57,19 @@ namespace kursach_4._12._23.Controllers
 
                                 if (isPasswordCorrect)
                                 {
+                                    int userID = Convert.ToInt32(reader["ID"]);
                                     string userName = reader["Name"].ToString();
                                     string userEmail = reader["Email"].ToString();
                                     bool isuserAdmin = Convert.ToBoolean(reader["isAdmin"]);
                                     UserModel user = new UserModel
                                     {
+                                        ID = userID,
                                         Name = userName,
                                         Email = userEmail,
                                         isAdmin = isuserAdmin,
                                     };
 
-                                    var token = GenerateJwtToken(user,user.isAdmin);
+                                    var token = GenerateJwtToken(user);
                                     return Ok(new {Token = token});
                                 }
                                 else
@@ -109,7 +111,7 @@ namespace kursach_4._12._23.Controllers
 
 
         //
-        private string GenerateJwtToken(UserModel user, bool isAdmin)
+        private string GenerateJwtToken(UserModel user)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -118,9 +120,10 @@ namespace kursach_4._12._23.Controllers
             {
                 new Claim(ClaimTypes.Name, user.Name),
                 new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.NameIdentifier, user.ID.ToString())
             };
 
-            if (isAdmin)
+            if (user.isAdmin)
             {
                 claims.Add(new Claim(ClaimTypes.Role, "admin"));
             }

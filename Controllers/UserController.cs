@@ -48,9 +48,28 @@ namespace kursach_4._12._23.Controllers
 
         // GET api/<UserController>/5
         [HttpGet("{id}")]
-        public string Get(int id)
+        [Authorize]
+        public async Task<JsonResult> Get(int id)
         {
-            return "value";
+            string query = "SELECT * FROM [Product] WHERE ID = @id";
+            DataTable table = new DataTable();
+            string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
+            SqlDataReader myReader;
+
+            using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+            {
+                myCon.Open();
+                using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                {
+                    myCommand.Parameters.AddWithValue("@id", id);
+                    myReader = await myCommand.ExecuteReaderAsync();
+                    table.Load(myReader);
+                    myReader.Close();
+                    myCon.Close();
+                }
+            }
+
+            return new JsonResult(table);
         }
         //register user
         // POST api/<UserController>
@@ -100,10 +119,50 @@ namespace kursach_4._12._23.Controllers
         }
 
         // PUT api/<UserController>/5
-        [HttpPut("{id}")]
-
-        public void Put(int id, [FromBody] string value)
+        [HttpPut]
+        [Authorize]
+        public async Task<IActionResult> Put([FromForm] UserModel userModel)
         {
+            if (!IsUnique(userModel.Name, "name"))
+            {
+                return BadRequest("Логин занят.");
+            }
+            else if (!IsUnique(userModel.Email, "email"))
+            {
+                return BadRequest("Email занят.");
+            }
+            try
+            {
+                string query = "UPDATE [User] SET Name = @Name, Email = @Email, Password = @Password WHERE ID = @Id";
+                string sqlDatasource = _configuration.GetConnectionString("DefaultConnection");
+
+                using (SqlConnection myCon = new SqlConnection(sqlDatasource))
+                {
+                    myCon.Open();
+
+                    using (SqlCommand myCommand = new SqlCommand(query, myCon))
+                    {
+                        myCommand.Parameters.AddWithValue("@Id", userModel.ID);
+                        myCommand.Parameters.AddWithValue("@Name", userModel.Name);
+                        myCommand.Parameters.AddWithValue("@Email", userModel.Email);
+                        myCommand.Parameters.AddWithValue("@Password", userModel.Password);
+
+
+                        if (myCommand.ExecuteNonQuery() > 0)
+                        {
+                            return Ok("User updated successfully");
+                        }
+                        else
+                        {
+                            return BadRequest("User not updated.");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error updating user: {ex.Message}");
+            }
         }
 
         // DELETE api/<UserController>/5
