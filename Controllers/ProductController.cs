@@ -158,7 +158,6 @@ namespace kursach_4._12._23.Controllers
             {
                 return BadRequest("Invalid price format");
             }
-            await Console.Out.WriteLineAsync(productModel.Name + " ID: " + productModel.ID);
             try
             {
                 string query = "UPDATE [Product] SET Name = @Name, Price = @Price, Count = @Count, Description = @Description, Category = @Category WHERE ID = @Id";
